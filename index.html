@@ -20,6 +20,10 @@
             font-size: 0.8em;
             color: #888;
         }
+        .post-number {
+            font-weight: bold;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -32,6 +36,8 @@
             <textarea id="postContent" name="content" rows="4" cols="50" placeholder="ここにメッセージを入力してください"></textarea><br>
             <button type="button" onclick="addPost()">投稿する</button>
         </form>
+        <!-- 何番目に投稿したか表示 -->
+        <div id="postNumber" class="post-number"></div>
     </div>
 
     <!-- 投稿の一覧 -->
@@ -43,7 +49,7 @@
     <script type="module">
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
         // Firebaseの設定情報
         const firebaseConfig = {
@@ -85,6 +91,10 @@
                 return;
             }
 
+            // 現在の投稿数を取得して、新しい投稿番号を決定
+            const postsSnapshot = await getDocs(collection(db, "posts"));
+            const postNumber = postsSnapshot.size + 1; // 1番目から始まるように
+
             // Firestoreに新しい投稿を追加
             await addDoc(collection(db, "posts"), {
                 content: content,
@@ -93,6 +103,12 @@
 
             // 投稿フォームをリセット
             document.getElementById('postForm').reset();
+
+            // 投稿番号を表示
+            document.getElementById('postNumber').innerText = `あなたは ${postNumber} 番目に投稿しました`;
+
+            // 投稿を再ロード
+            loadPosts();
         }
 
         // addPost 関数をグローバルに公開
