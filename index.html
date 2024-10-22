@@ -22,7 +22,6 @@
         }
         .post-number {
             font-weight: bold;
-            margin-top: 10px;
         }
     </style>
 </head>
@@ -36,8 +35,6 @@
             <textarea id="postContent" name="content" rows="4" cols="50" placeholder="ここにメッセージを入力してください"></textarea><br>
             <button type="button" onclick="addPost()">投稿する</button>
         </form>
-        <!-- 何番目に投稿したか表示 -->
-        <div id="postNumber" class="post-number"></div>
     </div>
 
     <!-- 投稿の一覧 -->
@@ -77,7 +74,7 @@
                     const post = doc.data();
                     const postDiv = document.createElement('div');
                     postDiv.className = 'posts';
-                    postDiv.innerHTML = `<div>${post.content}</div><div class="timestamp">${new Date(post.timestamp).toLocaleString()}</div>`;
+                    postDiv.innerHTML = `<div class="post-number">${post.number}. ${post.content}</div><div class="timestamp">${new Date(post.timestamp).toLocaleString()}</div>`;
                     postsContainer.appendChild(postDiv);
                 });
             });
@@ -95,17 +92,15 @@
             const postsSnapshot = await getDocs(collection(db, "posts"));
             const postNumber = postsSnapshot.size + 1; // 1番目から始まるように
 
-            // Firestoreに新しい投稿を追加
+            // Firestoreに新しい投稿を追加（番号付き）
             await addDoc(collection(db, "posts"), {
                 content: content,
-                timestamp: new Date().getTime()
+                timestamp: new Date().getTime(),
+                number: postNumber  // 投稿番号を一緒に保存
             });
 
             // 投稿フォームをリセット
             document.getElementById('postForm').reset();
-
-            // 投稿番号を表示
-            document.getElementById('postNumber').innerText = `あなたは ${postNumber} 番目に投稿しました`;
 
             // 投稿を再ロード
             loadPosts();
