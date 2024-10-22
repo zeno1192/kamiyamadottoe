@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>神山参加型ドット絵掲示板</title>
+    <title>神山参加型ドット絵専用掲示板</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h1>神山参加型ドット絵掲示板掲示板</h1>
+    <h1>神山参加型ドット絵専用掲示板</h1>
     
     <!-- 投稿フォーム -->
     <div class="post-form">
@@ -39,48 +39,64 @@
         <!-- 投稿がここに表示されます -->
     </div>
 
-    <script>
-        // ローカルストレージから投稿を取得して表示する関数
+    <!-- Firebase SDKの読み込み -->
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+        // Firebaseの設定情報
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAtxd8yLhjaDkyQ0n6ZfBsmxTuHdVPdf0",
+            authDomain: "kamiyamado-71855.firebaseapp.com",
+            projectId: "kamiyamado-71855",
+            storageBucket: "kamiyamado-71855.appspot.com",
+            messagingSenderId: "391355067941",
+            appId: "1:391355067941:web:dc2a6cc26fe3ed5ff119cc"
+        };
+
+        // Firebaseの初期化
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Firestoreから投稿を取得して表示する関数
         function loadPosts() {
             const postsContainer = document.getElementById('postsContainer');
             postsContainer.innerHTML = ''; // 初期化
 
-            // ローカルストレージから投稿リストを取得
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-
-            posts.forEach(post => {
-                const postDiv = document.createElement('div');
-                postDiv.className = 'posts';
-                postDiv.innerHTML = `<div>${post.content}</div><div class="timestamp">${new Date(post.timestamp).toLocaleString()}</div>`;
-                postsContainer.appendChild(postDiv);
+            const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+            onSnapshot(q, (snapshot) => {
+                postsContainer.innerHTML = ''; // 新しい投稿を表示するたびにクリア
+                snapshot.forEach((doc) => {
+                    const post = doc.data();
+                    const postDiv = document.createElement('div');
+                    postDiv.className = 'posts';
+                    postDiv.innerHTML = `<div>${post.content}</div><div class="timestamp">${new Date(post.timestamp).toLocaleString()}</div>`;
+                    postsContainer.appendChild(postDiv);
+                });
             });
         }
 
         // 投稿を追加する関数
-        function addPost() {
+        async function addPost() {
             const content = document.getElementById('postContent').value;
             if (content.trim() === "") {
                 alert("投稿内容を入力してください");
                 return;
             }
 
-            // 新しい投稿をオブジェクトとして作成
-            const newPost = {
+            // Firestoreに新しい投稿を追加
+            await addDoc(collection(db, "posts"), {
                 content: content,
                 timestamp: new Date().getTime()
-            };
-
-            // 既存の投稿を取得して新しい投稿を追加
-            const posts = JSON.parse(localStorage.getItem('posts')) || [];
-            posts.push(newPost);
-            localStorage.setItem('posts', JSON.stringify(posts)); // ローカルストレージに保存
+            });
 
             // 投稿フォームをリセット
             document.getElementById('postForm').reset();
-
-            // 新しい投稿を表示
-            loadPosts();
         }
+
+        // addPost 関数をグローバルに公開
+        window.addPost = addPost;
 
         // ページが読み込まれた時に投稿をロード
         window.onload = loadPosts;
