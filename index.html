@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神山参加型ドット絵掲示板</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .post-form {
+            margin-bottom: 20px;
+        }
+        .posts {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <h1>神山参加型ドット絵掲示板掲示板</h1>
+    
+    <!-- 投稿フォーム -->
+    <div class="post-form">
+        <form id="postForm">
+            <label for="postContent">投稿内容:</label><br>
+            <textarea id="postContent" name="content" rows="4" cols="50" placeholder="ここにメッセージを入力してください"></textarea><br>
+            <button type="button" onclick="addPost()">投稿する</button>
+        </form>
+    </div>
+
+    <!-- 投稿の一覧 -->
+    <div id="postsContainer">
+        <!-- 投稿がここに表示されます -->
+    </div>
+
+    <script>
+        // ローカルストレージから投稿を取得して表示する関数
+        function loadPosts() {
+            const postsContainer = document.getElementById('postsContainer');
+            postsContainer.innerHTML = ''; // 初期化
+
+            // ローカルストレージから投稿リストを取得
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+
+            posts.forEach(post => {
+                const postDiv = document.createElement('div');
+                postDiv.className = 'posts';
+                postDiv.innerHTML = `<div>${post.content}</div><div class="timestamp">${new Date(post.timestamp).toLocaleString()}</div>`;
+                postsContainer.appendChild(postDiv);
+            });
+        }
+
+        // 投稿を追加する関数
+        function addPost() {
+            const content = document.getElementById('postContent').value;
+            if (content.trim() === "") {
+                alert("投稿内容を入力してください");
+                return;
+            }
+
+            // 新しい投稿をオブジェクトとして作成
+            const newPost = {
+                content: content,
+                timestamp: new Date().getTime()
+            };
+
+            // 既存の投稿を取得して新しい投稿を追加
+            const posts = JSON.parse(localStorage.getItem('posts')) || [];
+            posts.push(newPost);
+            localStorage.setItem('posts', JSON.stringify(posts)); // ローカルストレージに保存
+
+            // 投稿フォームをリセット
+            document.getElementById('postForm').reset();
+
+            // 新しい投稿を表示
+            loadPosts();
+        }
+
+        // ページが読み込まれた時に投稿をロード
+        window.onload = loadPosts;
+    </script>
+</body>
+</html>
